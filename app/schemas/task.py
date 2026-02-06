@@ -1,7 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
-
-# Exercise: Create these models
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional
 
 class TaskCreate(BaseModel):
     """Schema for creating a new task"""
@@ -14,18 +12,20 @@ class TaskUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=500)
     completed: Optional[bool] = None
-    pass
+    
 
 class TaskResponse(BaseModel):
     """Schema for task responses"""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
     title: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=500)
     completed: Optional[bool] = None
-    pass
+    
 
 class TaskListResponse(BaseModel):
-    """Schema for list of tasks with pagination info"""
-    title: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-    completed: Optional[bool] = None
-    pass
+    tasks: list[TaskResponse]
+    total: int
+    skip: int
+    limit: int

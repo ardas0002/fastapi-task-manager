@@ -1,0 +1,132 @@
+{
+	"info": {
+		"name": "Task Manager API",
+		"description": "Kolekcja do testowania Task Manager API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000"
+		}
+	],
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/health"
+					}
+				}
+			]
+		},
+		{
+			"name": "Tasks",
+			"item": [
+				{
+					"name": "Create Task",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/tasks",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"title\": \"Żjeść obiad + wypić colke\",\n\t\"completed\": true\n}"
+						}
+					}
+				},
+				{
+					"name": "Create Task (minimal)",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/tasks",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"title\": \"Drugi task\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Get All Tasks",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/tasks",
+							"host": ["{{base_url}}"],
+							"path": ["tasks"]
+						}
+					}
+				},
+				{
+					"name": "Get Tasks (with filters)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/tasks?completed=false&search=FastAPI&skip=0&limit=5",
+							"host": ["{{base_url}}"],
+							"path": ["tasks"],
+							"query": [
+								{ "key": "completed", "value": "false" },
+								{ "key": "search", "value": "FastAPI" },
+								{ "key": "skip", "value": "0" },
+								{ "key": "limit", "value": "5" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Task by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/tasks/1"
+					}
+				},
+				{
+					"name": "Update Task",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/tasks/1",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"title\": \"Żjeść obiad + wypić colke\",\n\t\"completed\": true\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Task",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/tasks/1"
+					}
+				},
+				{
+					"name": "Get Task 404",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/tasks/9999"
+					}
+				}
+			]
+		}
+	]
+}

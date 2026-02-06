@@ -1,0 +1,16 @@
+from sqlmodel import SQLModel, create_engine, Session
+
+DATABASE_URL = "sqlite:///./task_manager.db"
+engine = create_engine(
+    DATABASE_URL,
+    echo=True,
+    connect_args={"check_same_thread": False}
+)
+
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+def get_session():
+    """Dependency - return data base session"""
+    with Session(engine) as session:
+        yield session
