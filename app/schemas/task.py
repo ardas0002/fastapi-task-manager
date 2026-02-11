@@ -1,17 +1,18 @@
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional
 
 class TaskCreate(BaseModel):
     """Schema for creating a new task"""
     title: str = Field(min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
+    description: str | None = Field(None, max_length=500)
     completed: bool = False
-    
+    project_id: int | None = None
+
 class TaskUpdate(BaseModel):
     """Schema for updating a task (all fields optional)"""
-    title: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-    completed: Optional[bool] = None
+    title: str | None = Field(None, min_length=1, max_length=100)
+    description: str | None = Field(None, max_length=500)
+    completed: bool | None = None
+    project_id: int | None = None
     
 
 class TaskResponse(BaseModel):
@@ -19,9 +20,10 @@ class TaskResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    title: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-    completed: Optional[bool] = None
+    title: str
+    description: str | None
+    completed: bool
+    project_id: int | None
     
 
 class TaskListResponse(BaseModel):
@@ -29,3 +31,4 @@ class TaskListResponse(BaseModel):
     total: int
     skip: int
     limit: int
+
