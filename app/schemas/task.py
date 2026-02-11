@@ -24,6 +24,7 @@ class TaskResponse(BaseModel):
     description: str | None
     completed: bool
     project_id: int | None
+    owner_id: int
     
 
 class TaskListResponse(BaseModel):

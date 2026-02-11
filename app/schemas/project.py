@@ -14,6 +14,7 @@ class ProjectResponse(BaseModel):
     id: int
     name: str
     description: str | None
+    owner_id: int
 
 class ProjectWithTasksResponse(BaseModel):
     id: int

@@ -2,14 +2,19 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 
 from app.database import get_session
-from app.models import Project, Task
+from app.models import Project, Task, User
+from app.auth.dependencies import get_current_user
 from app.schemas import *
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
 @router.post("", response_model=ProjectResponse, status_code=201)
-def create_project(project_data: ProjectCreate, session: Session = Depends(get_session)):
-    db_project = Project.model_validate(project_data)
+def create_project(
+    project_data: ProjectCreate,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    db_project = Project.model_validate(project_data, update={"owner_id": current_user.id})
     session.add(db_project)
     session.commit()
     session.refresh(db_project)
@@ -20,9 +25,10 @@ def get_projects(
     search: str | None = Query(default=None, min_length=1, max_length=60),
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=10, ge=1, le=100),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
-    statement = select(Project)
+    statement = select(Project).where(Project.owner_id == current_user.id)
 
     if search:
         statement = statement.where(
@@ -33,7 +39,7 @@ def get_projects(
 
     projects = session.exec(statement).all()
 
-    count_statement = select(Project)
+    count_statement = select(Project).where(Project.owner_id == current_user.id)
 
     if search:
         count_statement = count_statement.where(
@@ -45,18 +51,31 @@ def get_projects(
     return ProjectListResponse(projects=projects, total=total, skip=skip, limit=limit)
 
 @router.get("/{project_id}", response_model=ProjectResponse)
-def get_project(project_id: int, session: Session = Depends(get_session)):
+def get_project(
+    project_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
     project = session.get(Project, project_id)
     if not project:
         raise HTTPException(404, "Project not found")
+    if project.owner_id != current_user.id:
+        raise HTTPException(403, "Not your project")
     return project
 
 @router.put("/{project_id}", response_model=ProjectResponse)
-def update_project(project_id: int, project_update: ProjectUpdate, session: Session = Depends(get_session)):
+def update_project(
+    project_id: int,
+    project_update: ProjectUpdate,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
     project = session.get(Project, project_id)
     if not project:
         raise HTTPException(404, "Project not found")
-    
+    if project.owner_id != current_user.id:
+        raise HTTPException(403, "Not your project")
+
     update_data = project_update.model_dump(exclude_unset=True)
 
     project.sqlmodel_update(update_data)
@@ -68,10 +87,16 @@ def update_project(project_id: int, project_update: ProjectUpdate, session: Sess
     return project
 
 @router.delete("/{project_id}")
-def delete_project(project_id: int, session: Session = Depends(get_session)):
+def delete_project(
+    project_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
     project = session.get(Project, project_id)
     if not project:
         raise HTTPException(404, "Project not found")
+    if project.owner_id != current_user.id:
+        raise HTTPException(403, "Not your project")
 
     session.delete(project)
     session.commit()
@@ -84,12 +109,14 @@ def get_project_tasks(
     completed: bool | None = None,
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=10, ge=1, le=100),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
-    """Pobierz taski należące do projektu"""
     project = session.get(Project, project_id)
     if not project:
         raise HTTPException(404, "Project not found")
+    if project.owner_id != current_user.id:
+        raise HTTPException(403, "Not your project")
 
     statement = select(Task).where(Task.project_id == project_id)
 
@@ -108,4 +135,3 @@ def get_project_tasks(
     total = len(session.exec(count_statement).all())
 
     return TaskListResponse(tasks=tasks, total=total, skip=skip, limit=limit)
-
