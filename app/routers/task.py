@@ -3,6 +3,7 @@ from app.schemas import TaskListResponse, TaskResponse, TaskCreate, TaskUpdate
 from app.database import get_session
 from app.models import Task, Project, User
 from app.auth.dependencies import get_current_user
+from app.dependencies import get_owned_task
 from sqlmodel import select, Session
 
 router = APIRouter(
@@ -68,30 +69,17 @@ def get_tasks(
 
 @router.get("/{task_id}", response_model=TaskResponse)
 def get_task(
-    task_id: int,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    task: Task = Depends(get_owned_task)
 ):
-    task = session.get(Task, task_id)
-    if not task:
-        raise HTTPException(404, "Task not found")
-    if task.owner_id != current_user.id:
-        raise HTTPException(403, "Not your task")
     return task
 
 @router.put("/{task_id}", response_model=TaskResponse)
 def update_task(
-    task_id: int,
     task_update: TaskUpdate,
+    task: Task = Depends(get_owned_task),
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    task = session.get(Task, task_id)
-    if not task:
-        raise HTTPException(404, "Task not found")
-    if task.owner_id != current_user.id:
-        raise HTTPException(403, "Not your task")
-
     if task_update.project_id is not None:
         project = session.get(Project, task_update.project_id)
         if not project:
@@ -111,16 +99,9 @@ def update_task(
 
 @router.delete("/{task_id}")
 def delete_task(
-    task_id: int,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    task: Task = Depends(get_owned_task),
+    session: Session = Depends(get_session)
 ):
-    task = session.get(Task, task_id)
-    if not task:
-        raise HTTPException(404, "Task not found")
-    if task.owner_id != current_user.id:
-        raise HTTPException(403, "Not your task")
-
     session.delete(task)
     session.commit()
 

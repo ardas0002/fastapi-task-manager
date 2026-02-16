@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
-
 from app.database import get_session
+from app.dependencies import get_owned_project
 from app.models import Project, Task, User
 from app.auth.dependencies import get_current_user
 from app.schemas import *
+
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
@@ -52,30 +53,16 @@ def get_projects(
 
 @router.get("/{project_id}", response_model=ProjectResponse)
 def get_project(
-    project_id: int,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    project: Project = Depends(get_owned_project)
 ):
-    project = session.get(Project, project_id)
-    if not project:
-        raise HTTPException(404, "Project not found")
-    if project.owner_id != current_user.id:
-        raise HTTPException(403, "Not your project")
     return project
 
 @router.put("/{project_id}", response_model=ProjectResponse)
 def update_project(
-    project_id: int,
     project_update: ProjectUpdate,
+    project: Project = Depends(get_owned_project),
     session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
-):
-    project = session.get(Project, project_id)
-    if not project:
-        raise HTTPException(404, "Project not found")
-    if project.owner_id != current_user.id:
-        raise HTTPException(403, "Not your project")
-
+):   
     update_data = project_update.model_dump(exclude_unset=True)
 
     project.sqlmodel_update(update_data)
@@ -88,16 +75,9 @@ def update_project(
 
 @router.delete("/{project_id}")
 def delete_project(
-    project_id: int,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
-):
-    project = session.get(Project, project_id)
-    if not project:
-        raise HTTPException(404, "Project not found")
-    if project.owner_id != current_user.id:
-        raise HTTPException(403, "Not your project")
-
+    project: Project = Depends(get_owned_project),
+    session: Session = Depends(get_session)
+) -> dict:
     session.delete(project)
     session.commit()
 
@@ -105,20 +85,13 @@ def delete_project(
 
 @router.get("/{project_id}/tasks", response_model=TaskListResponse)
 def get_project_tasks(
-    project_id: int,
     completed: bool | None = None,
+    project: Project = Depends(get_owned_project),
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=10, ge=1, le=100),
     session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
 ):
-    project = session.get(Project, project_id)
-    if not project:
-        raise HTTPException(404, "Project not found")
-    if project.owner_id != current_user.id:
-        raise HTTPException(403, "Not your project")
-
-    statement = select(Task).where(Task.project_id == project_id)
+    statement = select(Task).where(Task.project_id == project.id)
 
     if completed is not None:
         statement = statement.where(Task.completed == completed)
@@ -127,7 +100,7 @@ def get_project_tasks(
 
     tasks = session.exec(statement).all()
 
-    count_statement = select(Task).where(Task.project_id == project_id)
+    count_statement = select(Task).where(Task.project_id == project.id)
 
     if completed is not None:
         count_statement = count_statement.where(Task.completed == completed)
