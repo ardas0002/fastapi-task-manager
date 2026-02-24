@@ -1,9 +1,9 @@
 from sqlmodel import SQLModel, create_engine, Session
+from app.config import settings
 
-DATABASE_URL = "sqlite:///./task_manager.db"
 engine = create_engine(
-    DATABASE_URL,
-    echo=True,
+    settings.database_url,
+    echo=settings.debug,
     connect_args={"check_same_thread": False}
 )
 
