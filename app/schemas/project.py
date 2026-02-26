@@ -4,7 +4,8 @@ from .task import TaskResponse
 class ProjectCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     description: str | None = Field(default=None, max_length=500)
-
+    priority: int = Field(default= 3, ge=1, le=5)
+    
 class ProjectUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     description: str | None = Field(default=None, min_length=1, max_length=500)
