@@ -17,6 +17,9 @@ class Settings(BaseSettings):
         "http://localhost:3000"
     ]
 
+    sendgrid_api_key: str = ""
+    from_email: str = ""
+
     class Config:        
         env_file = ".env"
         env_file_encoding = "utf-8"

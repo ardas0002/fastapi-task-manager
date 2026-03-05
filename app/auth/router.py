@@ -1,17 +1,17 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from sqlmodel import Session, select
 
 from app.database import get_session
 from app.models import User
 from .schemas import UserCreate, UserLogin, Token, UserResponse
-from .schemas import UserCreate, UserLogin, Token, UserResponse
 from .service import hash_password, verify_password, create_access_token
 from .dependencies import get_current_user
+from app.services.email_service import EmailService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-def register(user_data: UserCreate, session: Session = Depends(get_session)):
+def register(user_data: UserCreate, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
     
     existing_user = session.exec(
         select(User).where(User.email == user_data.email)
@@ -28,6 +28,13 @@ def register(user_data: UserCreate, session: Session = Depends(get_session)):
     session.add(user)
     session.commit()
     session.refresh(user)
+
+    email_service = EmailService()
+    background_tasks.add_task(
+        email_service.send_welcome_email,
+        to_email=user.email,
+        username=user.username
+    )
 
     return user
 

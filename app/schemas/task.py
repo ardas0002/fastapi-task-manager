@@ -7,7 +7,6 @@ def validate_future_date(v: date | None) -> date | None:
     return v
 
 class TaskCreate(BaseModel):
-    """Schema for creating a new task"""
     title: str = Field(min_length=1, max_length=100)
     description: str | None = Field(None, max_length=500)
     completed: bool = False
@@ -28,7 +27,6 @@ class TaskCreate(BaseModel):
         return self.due_date < date.today() and not self.completed
 
 class TaskUpdate(BaseModel):
-    """Schema for updating a task (all fields optional)"""
     title: str | None = Field(None, min_length=1, max_length=100)
     description: str | None = Field(None, max_length=500)
     completed: bool | None = None
@@ -49,7 +47,6 @@ class TaskUpdate(BaseModel):
         return self.due_date < date.today() and not self.completed
 
 class TaskResponse(BaseModel):
-    """Schema for task responses"""
     model_config = ConfigDict(from_attributes=True)
 
     id: int
