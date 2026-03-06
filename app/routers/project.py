@@ -1,17 +1,20 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
 from sqlmodel import Session, select
 from app.database import get_session
 from app.dependencies import get_owned_project
 from app.models import Project, Task, User
 from app.auth.dependencies import get_current_user
 from app.schemas import *
+from app.services.email_service import EmailService
 
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
+email_service = EmailService()
 
 @router.post("", response_model=ProjectResponse, status_code=201)
 def create_project(
     project_data: ProjectCreate,
+    background_tasks: BackgroundTasks,
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
@@ -19,6 +22,13 @@ def create_project(
     session.add(db_project)
     session.commit()
     session.refresh(db_project)
+
+    background_tasks.add_task(
+        email_service.send_project_created_email,
+        to_email=current_user.email,
+        project_name=db_project.name
+    )
+
     return db_project
 
 @router.get("", response_model=ProjectListResponse)

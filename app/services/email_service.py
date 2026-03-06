@@ -67,3 +67,15 @@ class EmailService:
             "Welcome!",
             html
         )
+    
+    async def send_project_created_email(self, to_email: str, project_name: str) -> bool:
+        html = self.render_template(
+            "created_project.html",
+            {"project_name": project_name}
+        )
+
+        return await self.send_email(
+            to_email,
+            "Successfuly created project!",
+            html
+        )

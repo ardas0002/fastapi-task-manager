@@ -55,6 +55,7 @@ class TaskResponse(BaseModel):
     completed: bool
     priority: int
     due_date: date | None
+    created: date
     project_id: int | None
     owner_id: int
 

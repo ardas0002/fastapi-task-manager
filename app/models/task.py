@@ -12,6 +12,7 @@ class Task(SQLModel, table=True):
     description: str | None = Field(default=None, max_length=500)
     completed: bool = Field(default=False)
     due_date: date | None = Field(default=None)
+    created: date = Field(default_factory=date.today)
     priority: int = Field(default=3) 
     project_id: int | None = Field(default=None, foreign_key="project.id", ondelete="SET NULL")
     owner_id: int = Field(foreign_key="user.id")

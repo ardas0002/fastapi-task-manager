@@ -10,6 +10,8 @@ from app.services.email_service import EmailService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+email_service = EmailService()
+
 @router.post("/register", response_model=UserResponse, status_code=201)
 def register(user_data: UserCreate, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
     
@@ -29,7 +31,6 @@ def register(user_data: UserCreate, background_tasks: BackgroundTasks, session: 
     session.commit()
     session.refresh(user)
 
-    email_service = EmailService()
     background_tasks.add_task(
         email_service.send_welcome_email,
         to_email=user.email,

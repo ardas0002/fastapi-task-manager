@@ -19,5 +19,5 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
-    "httpx>=0.28.0",  # do testowania FastAPI
+    "httpx>=0.28.0",  
 ]
